@@ -1,0 +1,29 @@
+[package]
+name = "otpshka"
+version = "1.0.0"
+authors = ["Douman <douman@gmx.se>"]
+edition = "2018"
+license = "BSL-1.0"
+repository = "https://github.com/DoumanAsh/otpshka"
+description = "OTP library"
+keywords = ["otp", "totp", "hotp"]
+categories = ["authentication"]
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+    "README.md"
+]
+
+[dependencies.hex]
+version = "0"
+
+[dependencies.ring]
+version = "0.17.0-alpha.7"
+default-features = false
+optional = true
+
+[features]
+# Enables time based algorithm
+totp = ["hotp"]
+# Enables basic counter based algorithm
+hotp = ["ring"]
