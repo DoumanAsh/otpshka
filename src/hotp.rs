@@ -1,13 +1,10 @@
-//!Counter based algorithm.
-//!
-
 use core::{mem, ptr};
 
 ///Re-export of HMAC algorithms from `ring`
-pub use ring::hmac;
+use ring::hmac;
 
 #[derive(Clone)]
-///Algorithm representation
+///HMAC based OTP algorithm that uses simple counter as input.
 pub struct Hotp {
     ///HMAC key generated using `algorithm` and `secret`
     ///

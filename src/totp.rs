@@ -4,13 +4,12 @@
 //!Library makes no attempt to force source, hence user must manually provide UNIX time to generate
 //!password.
 
-///Re-export of HMAC algorithms from `ring`
-pub use ring::hmac;
+use ring::hmac;
 
 use crate::hotp::Hotp;
 
 #[derive(Clone)]
-///Algorithm representation
+///Modification of `Htop` algorithm that uses unix timestamp within `window`
 pub struct Totp {
     ///Basic HMAC OTP algorithm, which is used as basis.
     pub inner: Hotp,
@@ -18,10 +17,10 @@ pub struct Totp {
     ///
     ///Default and recommended is 1.
     pub skew: u8,
-    ///Duration in seconds of a step.
+    ///Time window in seconds.
     ///
     ///Default and recommended is 30.
-    pub step: u64,
+    pub window: u64,
 }
 
 impl Totp {
@@ -35,14 +34,14 @@ impl Totp {
         Self {
             inner: Hotp::new(algorithm, secret),
             skew: 1,
-            step: 30,
+            window: 30,
         }
     }
 
     #[inline(always)]
     ///Signs provided `time` value using stored HMAC key.
     pub fn sign(&self, time: u64) -> impl AsRef<[u8]> + Clone + Copy {
-        self.inner.sign(time / self.step)
+        self.inner.sign(time / self.window)
     }
 
     #[inline(always)]
@@ -52,7 +51,7 @@ impl Totp {
     ///
     ///Recommended buffer length is be within `6..8`
     pub fn generate_to<T: AsMut<[u8]>>(&self, time: u64, dest: T) {
-        self.inner.generate_to(time / self.step, dest)
+        self.inner.generate_to(time / self.window, dest)
     }
 
     #[inline]
@@ -65,16 +64,16 @@ impl Totp {
             Err(_) => return false,
         };
 
-        if self.inner.generate_num(time / self.step, token.len() as u8) == expected {
+        if self.inner.generate_num(time / self.window, token.len() as u8) == expected {
             return true;
         }
 
         for time_offset in 1..=self.skew as u64 {
-            if self.inner.generate_num((time + time_offset) / self.step, token.len() as u8) == expected {
+            if self.inner.generate_num((time + time_offset) / self.window, token.len() as u8) == expected {
                 return true;
             }
 
-            if self.inner.generate_num((time - time_offset) / self.step, token.len() as u8) == expected {
+            if self.inner.generate_num((time - time_offset) / self.window, token.len() as u8) == expected {
                 return true;
             }
         }

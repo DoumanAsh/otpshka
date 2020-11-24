@@ -11,6 +11,14 @@
 #![cfg_attr(feature = "cargo-clippy", allow(clippy::style))]
 
 #[cfg(feature = "hotp")]
-pub mod hotp;
+///Re-export of HMAC algorithms from `ring`
+pub use ring::hmac;
+
+#[cfg(feature = "hotp")]
+mod hotp;
+#[cfg(feature = "hotp")]
+pub use hotp::Hotp;
 #[cfg(feature = "totp")]
-pub mod totp;
+mod totp;
+#[cfg(feature = "totp")]
+pub use totp::Totp;
