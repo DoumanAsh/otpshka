@@ -8,6 +8,14 @@ use ring::hmac;
 
 use crate::hotp::Hotp;
 
+#[cfg(feature = "std")]
+fn current_time_s() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now().duration_since(UNIX_EPOCH)
+                     .expect("now should be after epoch")
+                     .as_secs()
+}
+
 #[derive(Clone)]
 ///Modification of `Htop` algorithm that uses unix timestamp within `window`
 pub struct Totp {
@@ -55,10 +63,10 @@ impl Totp {
     }
 
     #[cfg(feature = "std")]
+    #[inline(always)]
     ///Generates pass using current system time from `std`
     pub fn generate_to_now<T: AsMut<[u8]>>(&self, dest: T) {
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("now should be after epoch");
-        self.inner.generate_to(now.as_secs() / self.window, dest)
+        self.generate_to(current_time_s(), dest)
     }
 
     #[inline]
@@ -86,6 +94,13 @@ impl Totp {
         }
 
         false
+    }
+
+    #[cfg(feature = "std")]
+    #[inline]
+    ///Checks whether provided `token` corresponds to current system time.
+    pub fn verify_now(&self, token: &str) -> bool {
+        self.verify(token, current_time_s())
     }
 }
 
@@ -149,12 +164,15 @@ mod tests {
         let mut token1 = [0u8, 0, 0, 0, 0, 0];
         totp.generate_to_now(&mut token1[..]);
         let token1 = core::str::from_utf8(&token1).expect("UTF-8 compatible output");
+        assert!(totp.verify_now(token1));
 
         let mut token2 = [0u8, 0, 0, 0, 0, 0];
         std::thread::sleep(core::time::Duration::from_secs(1));
         totp.generate_to_now(&mut token2[..]);
         let token2 = core::str::from_utf8(&token2).expect("UTF-8 compatible output");
+        assert!(totp.verify_now(token2));
 
         assert_eq!(token1, token2);
+        assert!(totp.verify_now(token1));
     }
 }
