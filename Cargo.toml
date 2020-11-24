@@ -27,3 +27,5 @@ optional = true
 totp = ["hotp"]
 # Enables basic counter based algorithm
 hotp = ["ring"]
+# Enables std related features like accessing current time.
+std = []

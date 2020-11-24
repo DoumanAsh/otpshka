@@ -45,13 +45,20 @@ impl Totp {
     }
 
     #[inline(always)]
-    ///Generates digest based on provided `time` and writes it into provided `dest`.
+    ///Generates pass based on provided `time` and writes it into provided `dest`.
     ///
     ///This always writes `dest.as_ref().len()`.
     ///
     ///Recommended buffer length is be within `6..8`
     pub fn generate_to<T: AsMut<[u8]>>(&self, time: u64, dest: T) {
         self.inner.generate_to(time / self.window, dest)
+    }
+
+    #[cfg(feature = "std")]
+    ///Generates pass using current system time from `std`
+    pub fn generate_to_now<T: AsMut<[u8]>>(&self, dest: T) {
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("now should be after epoch");
+        self.inner.generate_to(now.as_secs() / self.window, dest)
     }
 
     #[inline]
@@ -108,6 +115,7 @@ mod tests {
             assert!(totp.verify(token, *time - 1));
         }
     }
+
     #[test]
     fn should_test_totp() {
         let input = [
@@ -130,5 +138,23 @@ mod tests {
             assert!(totp.verify(token, *time + 10));
             assert!(totp.verify(token, *time - 10));
         }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn should_test_totp_now() {
+        let secret = [72, 101, 108, 108, 111, 33, 222, 173, 190, 239];
+        let totp = Totp::new(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, secret);
+
+        let mut token1 = [0u8, 0, 0, 0, 0, 0];
+        totp.generate_to_now(&mut token1[..]);
+        let token1 = core::str::from_utf8(&token1).expect("UTF-8 compatible output");
+
+        let mut token2 = [0u8, 0, 0, 0, 0, 0];
+        std::thread::sleep(core::time::Duration::from_secs(1));
+        totp.generate_to_now(&mut token2[..]);
+        let token2 = core::str::from_utf8(&token2).expect("UTF-8 compatible output");
+
+        assert_eq!(token1, token2);
     }
 }
