@@ -14,9 +14,6 @@ include = [
     "README.md"
 ]
 
-[dependencies.hex]
-version = "0"
-
 [dependencies.ring]
 version = "0.17.0-alpha.7"
 default-features = false

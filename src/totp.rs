@@ -1,9 +1,3 @@
-//!Time based algorithm
-//!
-//!Algorithm relies on time as source uniqueness.
-//!Library makes no attempt to force source, hence user must manually provide UNIX time to generate
-//!password.
-
 use ring::hmac;
 
 use crate::hotp::Hotp;
