@@ -1,30 +1,29 @@
 use core::{mem, ptr};
 
-///Re-export of HMAC algorithms from `ring`
 use ring::hmac;
+
+use crate::Algorithm;
 
 #[derive(Clone)]
 ///HMAC based OTP algorithm that uses simple counter as input.
-pub struct Hotp {
+pub struct HOTP {
     ///HMAC key generated using `algorithm` and `secret`
-    ///
-    ///See `new` for details
-    pub key: hmac::Key,
+    key: hmac::Key,
 }
 
-impl Hotp {
+impl HOTP {
     #[inline]
     ///Initializes algorithm using provided `algorithm` and `secret`
     ///
     ///- `algorithm` - Generally acceptable are HMAC based on `sha-1`, `sha-256` and `sha-512`
     ///- `secret` - Raw bytes used to derive HMAC key. User is responsible to decode it before
     ///passing.
-    pub fn new<T: AsRef<[u8]>>(algorithm: hmac::Algorithm, secret: T) -> Self {
+    pub fn new<T: AsRef<[u8]>>(algorithm: Algorithm, secret: T) -> Self {
         let secret = secret.as_ref();
         debug_assert_ne!(secret.len(), 0);
 
         Self {
-            key: hmac::Key::new(algorithm, secret),
+            key: hmac::Key::new(algorithm.into(), secret),
         }
     }
 

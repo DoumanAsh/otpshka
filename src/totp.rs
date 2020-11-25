@@ -1,6 +1,6 @@
-use ring::hmac;
+use crate::hotp::HOTP;
 
-use crate::hotp::Hotp;
+use super::Algorithm;
 
 #[cfg(feature = "std")]
 fn current_time_s() -> u64 {
@@ -12,10 +12,10 @@ fn current_time_s() -> u64 {
 
 #[derive(Clone)]
 ///Modification of `Htop` algorithm that uses unix timestamp within `window`
-pub struct Totp {
-    ///Basic HMAC OTP algorithm, which is used as basis.
-    pub inner: Hotp,
-    ///Number of steps allowed as network delay.
+pub struct TOTP {
+    ///Basic HMAC OTP algorithm, which is used as corner-stone of TOTP.
+    inner: HOTP,
+    ///Number of seconds allowed as network delay.
     ///
     ///Default and recommended is 1.
     pub skew: u8,
@@ -25,16 +25,16 @@ pub struct Totp {
     pub window: u64,
 }
 
-impl Totp {
+impl TOTP {
     #[inline]
     ///Initializes algorithm using provided `algorithm` and `secret`
     ///
     ///- `algorithm` - Generally acceptable are HMAC based on `sha-1`, `sha-256` and `sha-512`
     ///- `secret` - Raw bytes used to derive HMAC key. User is responsible to decode it before
     ///passing.
-    pub fn new<T: AsRef<[u8]>>(algorithm: hmac::Algorithm, secret: T) -> Self {
+    pub fn new<T: AsRef<[u8]>>(algorithm: Algorithm, secret: T) -> Self {
         Self {
-            inner: Hotp::new(algorithm, secret),
+            inner: HOTP::new(algorithm, secret),
             skew: 1,
             window: 30,
         }
@@ -110,7 +110,7 @@ mod tests {
         ];
 
         let secret = [72, 101, 108, 108, 111, 33, 222, 173, 190, 239];
-        let totp = Totp::new(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, secret);
+        let totp = TOTP::new(Default::default(), secret);
 
         for (time, expected) in input.iter() {
             let mut output = [0u8, 0, 0, 0, 0, 0];
@@ -134,7 +134,7 @@ mod tests {
         ];
 
         let secret = [72, 101, 108, 108, 111, 33, 222, 173, 190, 239];
-        let totp = Totp::new(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, secret);
+        let totp = TOTP::new(Default::default(), secret);
 
         for (time, expected) in input.iter() {
             let mut output = [0u8, 0, 0, 0, 0, 0];
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn should_test_totp_now() {
         let secret = [72, 101, 108, 108, 111, 33, 222, 173, 190, 239];
-        let totp = Totp::new(hmac::HMAC_SHA1_FOR_LEGACY_USE_ONLY, secret);
+        let totp = TOTP::new(Default::default(), secret);
 
         let mut token1 = [0u8, 0, 0, 0, 0, 0];
         totp.generate_to_now(&mut token1[..]);
