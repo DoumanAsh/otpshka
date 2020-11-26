@@ -28,14 +28,17 @@ impl HOTP {
     }
 
     #[inline]
-    ///Signs provided `time` value using stored HMAC key.
+    ///Signs provided `counter` value using stored HMAC key.
     pub fn sign(&self, counter: u64) -> impl AsRef<[u8]> + Clone + Copy {
         let counter = counter.to_be_bytes();
 
         hmac::sign(&self.key, &counter)
     }
 
-    pub(crate) fn generate_num(&self, counter: u64, digits: u8) -> u32 {
+    ///Generates password as number from provided `counter` value with length of `digits`.
+    ///
+    ///Note that in this case you must handle missing padding yourself.
+    pub fn generate_num(&self, counter: u64, digits: u8) -> u32 {
         const BASE: u32 = 10;
 
         let sign = self.sign(counter);
@@ -85,15 +88,15 @@ impl HOTP {
     }
 
     #[inline]
-    ///Generates digest based on provided `time` and writes it into provided `dest`.
+    ///Generates password based on provided `counter` value and writes it into provided `dest`.
     ///
     ///This always writes `dest.as_ref().len()`.
     ///
     ///Recommended buffer length is be within `6..8`
-    pub fn generate_to<T: AsMut<[u8]>>(&self, time: u64, mut dest: T) {
+    pub fn generate_to<T: AsMut<[u8]>>(&self, counter: u64, mut dest: T) {
         let dest = dest.as_mut();
         unsafe {
-            self.generate_to_ptr(time, dest.as_mut_ptr(), dest.len())
+            self.generate_to_ptr(counter, dest.as_mut_ptr(), dest.len())
         }
     }
 

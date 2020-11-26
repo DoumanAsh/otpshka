@@ -8,6 +8,4 @@ Simple and minimalistic `OTP` library.
 
 ## Feautres
 
-- `hotp` - Enables basic hmac implementation.
-- `totp` - Enables `htop` and time based wrapper for it.
 - `std`  - Enables std related features like accessing current time.

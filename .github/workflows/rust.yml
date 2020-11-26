@@ -40,4 +40,4 @@ jobs:
         rustc --version
 
     - name: Test
-      run: cargo test --features totp
+      run: cargo test --features std

@@ -47,6 +47,14 @@ impl TOTP {
     }
 
     #[inline(always)]
+    ///Generates password as number from provided `counter` value with length of `digits`.
+    ///
+    ///Note that in this case you must handle missing padding yourself.
+    pub fn generate_num(&self, time: u64, digits: u8) -> u32 {
+        self.inner.generate_num(time / self.window, digits)
+    }
+
+    #[inline(always)]
     ///Generates pass based on provided `time` and writes it into provided `dest`.
     ///
     ///This always writes `dest.as_ref().len()`.
