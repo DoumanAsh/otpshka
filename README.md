@@ -1,6 +1,6 @@
 # otpshka
 
-![Rust](https://github.com/DoumanAsh/uuid/workflows/Rust/badge.svg?branch=master)
+![Rust](https://github.com/DoumanAsh/otpshka/workflows/Rust/badge.svg?branch=master)
 [![Crates.io](https://img.shields.io/crates/v/otpshka.svg)](https://crates.io/crates/otpshka)
 [![Documentation](https://docs.rs/otpshka/badge.svg)](https://docs.rs/crate/otpshka/)
 
