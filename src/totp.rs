@@ -10,7 +10,6 @@ fn current_time_s() -> u64 {
                      .as_secs()
 }
 
-#[derive(Clone)]
 ///Modification of `Htop` algorithm that uses unix timestamp within `window`
 pub struct TOTP {
     ///Basic HMAC OTP algorithm, which is used as corner-stone of TOTP.

@@ -1,14 +1,35 @@
 use core::{mem, ptr};
 
-use ring::hmac;
-
 use crate::Algorithm;
 
-#[derive(Clone)]
+enum HmacKey {
+    Sha1(lhash::HmacKey::<lhash::Sha1>),
+    Sha256(lhash::HmacKey::<lhash::Sha256>),
+    Sha512(lhash::HmacKey::<lhash::Sha512>),
+}
+
+#[derive(Copy, Clone)]
+enum HmacOutput {
+    Sha1(<lhash::Sha1 as lhash::Digest>::OutputType),
+    Sha256(<lhash::Sha256 as lhash::Digest>::OutputType),
+    Sha512(<lhash::Sha512 as lhash::Digest>::OutputType),
+}
+
+impl AsRef<[u8]> for HmacOutput {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        match self {
+            HmacOutput::Sha1(ref output) => output.as_ref(),
+            HmacOutput::Sha256(ref output) => output.as_ref(),
+            HmacOutput::Sha512(ref output) => output.as_ref(),
+        }
+    }
+}
+
 ///HMAC based OTP algorithm that uses simple counter as input.
 pub struct HOTP {
     ///HMAC key generated using `algorithm` and `secret`
-    key: hmac::Key,
+    key: HmacKey
 }
 
 impl HOTP {
@@ -23,7 +44,11 @@ impl HOTP {
         debug_assert_ne!(secret.len(), 0);
 
         Self {
-            key: hmac::Key::new(algorithm.into(), secret),
+            key: match algorithm {
+                Algorithm::SHA1 => HmacKey::Sha1(lhash::HmacKey::new(secret)),
+                Algorithm::SHA256 => HmacKey::Sha256(lhash::HmacKey::new(secret)),
+                Algorithm::SHA512 => HmacKey::Sha512(lhash::HmacKey::new(secret)),
+            }
         }
     }
 
@@ -32,7 +57,11 @@ impl HOTP {
     pub fn sign(&self, counter: u64) -> impl AsRef<[u8]> + Clone + Copy {
         let counter = counter.to_be_bytes();
 
-        hmac::sign(&self.key, &counter)
+        match self.key {
+            HmacKey::Sha1(ref key) => HmacOutput::Sha1(key.sign(&counter)),
+            HmacKey::Sha256(ref key) => HmacOutput::Sha256(key.sign(&counter)),
+            HmacKey::Sha512(ref key) => HmacOutput::Sha512(key.sign(&counter)),
+        }
     }
 
     ///Generates password as number from provided `counter` value with length of `digits`.
